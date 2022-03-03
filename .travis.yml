@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tasiddiqui/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run tasiddiqui/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t tasiddiqui/multi-client ./client
+  - docker build -t tasiddiqui/multi-nginx ./nginx
+  - docker build -t tasiddiqui/multi-server ./server
+  - docker build -t tasiddiqui/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push tasiddiqui/multi-client
+  - docker push tasiddiqui/multi-nginx
+  - docker push tasiddiqui/multi-server
+  - docker push tasiddiqui/multi-worker
